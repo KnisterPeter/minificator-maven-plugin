@@ -109,12 +109,12 @@
     <repository>
       <id>maven.sinnerschrader.it</id>
       <name>maven.sinnerschrader.it-releases</name>
-      <url>https://maven.sinnerschrader.it/plugins-release-local</url>
+      <url>http://maven.sinnerschrader.it/plugins-release-local</url>
     </repository>
     <snapshotRepository>
       <id>maven.sinnerschrader.it</id>
       <name>maven.sinnerschrader.it-snapshots</name>
-      <url>https://maven.sinnerschrader.it/plugins-snapshot-local</url>
+      <url>http://maven.sinnerschrader.it/plugins-snapshot-local</url>
     </snapshotRepository>
   </distributionManagement>
 </project>
