@@ -68,6 +68,35 @@ public class ClosureMojo extends AbstractMojo {
   private File closureTargetFile;
 
   /**
+   * @parameter
+   */
+  private String closurePreScript;
+
+  /**
+   * @param closurePreScript
+   *          the closurePreScript to set
+   */
+  public final void setClosurePreScript(String closurePreScript) {
+    getLog().info("Set PreScript:"+closurePreScript);
+    this.closurePreScript = closurePreScript;
+  }
+  
+  /**
+   * @parameter
+   */
+  private String closurePostScript;
+
+  /**
+   * @param closurePostScript
+   *          the closurePostScript to set
+   */
+  public final void setClosurePostScript(String closurePostScript) {
+    getLog().info("Set PostScript:"+closurePostScript);
+    this.closurePostScript = closurePostScript;
+  }
+
+
+  /**
    * @param closureBasePath
    *          the closureBasePath to set
    */
@@ -106,7 +135,17 @@ public class ClosureMojo extends AbstractMojo {
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
     List<JSSourceFile> externs = Collections.emptyList();
-    List<JSSourceFile> sources = getFiles();
+    List<JSSourceFile> sources = new ArrayList<JSSourceFile>();
+    if (closurePreScript != null) {
+      getLog().info("Include PreScript:");
+    	sources.add(JSSourceFile.fromCode("closurePreScript.js", closurePreScript));
+    }
+    getFiles(sources);
+    if (closurePostScript != null) {
+      getLog().info("Include PostScript:");
+    	sources.add(JSSourceFile.fromCode("closurePostScript.js", closurePostScript));
+    }
+
     getLog().info("Got " + sources.size() + " source files");
     Result result = compiler.compile(externs, sources, options);
     if (!result.success) {
@@ -127,8 +166,7 @@ public class ClosureMojo extends AbstractMojo {
     }
   }
 
-  private List<JSSourceFile> getFiles() throws MojoExecutionException {
-    final List<JSSourceFile> files = new ArrayList<JSSourceFile>();
+  private List<JSSourceFile> getFiles(List<JSSourceFile> files) throws MojoExecutionException {
     if (closureSourceFiles != null && closureSourceFiles.length > 0)
       for (final String fileName : closureSourceFiles) {
         for (String path : closureBasePaths) {

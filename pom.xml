@@ -5,7 +5,7 @@
 
   <groupId>com.sinnerschrader.maven</groupId>
   <artifactId>minificator-maven-plugin</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.2</version>
   <name>Google Closure, CSSEmbed and LessCSS Maven Plugins</name>
   <packaging>maven-plugin</packaging>
 
