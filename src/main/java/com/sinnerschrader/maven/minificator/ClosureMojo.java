@@ -133,7 +133,7 @@ public class ClosureMojo extends AbstractMojo {
   /**
    * @parameter expression="${SIMPLE_OPTIMIZATIONS,ADVANCED_OPTIMIZATIONS,WHITESPACE_ONLY}"
    */
-  private CompilationLevel optimization = getCompilationLevel("SIMPLE_OPTIMIZATIONS");
+  private CompilationLevel closureOptimization = getCompilationLevel("SIMPLE_OPTIMIZATIONS");
 
   private static CompilationLevel getCompilationLevel(String level) 
   {
@@ -148,13 +148,13 @@ public class ClosureMojo extends AbstractMojo {
    * @param closurePostScript
    *          the closurePostScript to set
    */
-  public final void setOptimization(String optimization) {   
+  public final void setClosureOptimization(String optimization) {   
     final CompilationLevel cl = getCompilationLevel(optimization);
-    if (cl != null) {
-      getLog().info("setOptimization:not set:"+optimization);
+    if (cl == null) {
+      getLog().info("setClosureOptimization:not set:"+optimization);
     } else {
-      getLog().info("setOptimization:set:"+optimization);
-      this.optimization = cl;
+      getLog().info("setClosureOptimization:set:"+optimization);
+      this.closureOptimization = cl;
     }
   }
 
@@ -164,8 +164,8 @@ public class ClosureMojo extends AbstractMojo {
   public void execute() throws MojoExecutionException, MojoFailureException {
     final Compiler compiler = new Compiler();
     final CompilerOptions options = new CompilerOptions();
-    optimization.setOptionsForCompilationLevel(options);
-
+    closureOptimization.setOptionsForCompilationLevel(options);
+  
     final List<JSSourceFile> externs = Collections.emptyList();
     final List<JSSourceFile> sources = new ArrayList<JSSourceFile>();
     if (closurePreScript != null) {
