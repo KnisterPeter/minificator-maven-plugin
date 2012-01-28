@@ -6,7 +6,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -68,6 +70,35 @@ public class ClosureMojo extends AbstractMojo {
   private File closureTargetFile;
 
   /**
+   * @parameter
+   */
+  private String closurePreScript;
+
+  /**
+   * @param closurePreScript
+   *          the closurePreScript to set
+   */
+  public final void setClosurePreScript(String closurePreScript) {
+    getLog().info("Set PreScript:"+closurePreScript);
+    this.closurePreScript = closurePreScript;
+  }
+  
+  /**
+   * @parameter
+   */
+  private String closurePostScript;
+
+  /**
+   * @param closurePostScript
+   *          the closurePostScript to set
+   */
+  public final void setClosurePostScript(String closurePostScript) {
+    getLog().info("Set PostScript:"+closurePostScript);
+    this.closurePostScript = closurePostScript;
+  }
+
+
+  /**
    * @param closureBasePath
    *          the closureBasePath to set
    */
@@ -99,16 +130,56 @@ public class ClosureMojo extends AbstractMojo {
     this.closureSourceFiles = closureSourceFiles;
   }
 
+  /**
+   * @parameter expression="${SIMPLE_OPTIMIZATIONS,ADVANCED_OPTIMIZATIONS,WHITESPACE_ONLY}"
+   */
+  private CompilationLevel closureOptimization = getCompilationLevel("SIMPLE_OPTIMIZATIONS");
+
+  private static CompilationLevel getCompilationLevel(String level) 
+  {
+    final Map<String, CompilationLevel> factory = new HashMap<String, CompilationLevel>();
+    factory.put("SIMPLE_OPTIMIZATIONS", CompilationLevel.SIMPLE_OPTIMIZATIONS);
+    factory.put("ADVANCED_OPTIMIZATIONS", CompilationLevel.ADVANCED_OPTIMIZATIONS);
+    factory.put("WHITESPACE_ONLY", CompilationLevel.WHITESPACE_ONLY);
+    return factory.get(level);
+  }
+
+  /**
+   * @param closurePostScript
+   *          the closurePostScript to set
+   */
+  public final void setClosureOptimization(String optimization) {   
+    final CompilationLevel cl = getCompilationLevel(optimization);
+    if (cl == null) {
+      getLog().info("setClosureOptimization:not set:"+optimization);
+    } else {
+      getLog().info("setClosureOptimization:set:"+optimization);
+      this.closureOptimization = cl;
+    }
+  }
+
+  
+  
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
-    Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
-    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    final Compiler compiler = new Compiler();
+    final CompilerOptions options = new CompilerOptions();
+    closureOptimization.setOptionsForCompilationLevel(options);
+  
+    final List<JSSourceFile> externs = Collections.emptyList();
+    final List<JSSourceFile> sources = new ArrayList<JSSourceFile>();
+    if (closurePreScript != null) {
+      getLog().info("Include PreScript:");
+    	sources.add(JSSourceFile.fromCode("closurePreScript.js", closurePreScript));
+    }
+    getFiles(sources);
+    if (closurePostScript != null) {
+      getLog().info("Include PostScript:");
+    	sources.add(JSSourceFile.fromCode("closurePostScript.js", closurePostScript));
+    }
 
-    List<JSSourceFile> externs = Collections.emptyList();
-    List<JSSourceFile> sources = getFiles();
     getLog().info("Got " + sources.size() + " source files");
-    Result result = compiler.compile(externs, sources, options);
+    final Result result = compiler.compile(externs, sources, options);
     if (!result.success) {
       throw new MojoExecutionException("Failed to compile scripts");
     }
@@ -116,7 +187,7 @@ public class ClosureMojo extends AbstractMojo {
     getLog().info("Writing compiled js to " + closureTargetFile);
     try {
       FileUtils.forceMkdir(closureTargetFile.getParentFile());
-      FileWriter writer = new FileWriter(closureTargetFile);
+      final FileWriter writer = new FileWriter(closureTargetFile);
       try {
         writer.write(compiler.toSource());
       } finally {
@@ -127,12 +198,11 @@ public class ClosureMojo extends AbstractMojo {
     }
   }
 
-  private List<JSSourceFile> getFiles() throws MojoExecutionException {
-    final List<JSSourceFile> files = new ArrayList<JSSourceFile>();
+  private List<JSSourceFile> getFiles(List<JSSourceFile> files) throws MojoExecutionException {
     if (closureSourceFiles != null && closureSourceFiles.length > 0)
       for (final String fileName : closureSourceFiles) {
         for (String path : closureBasePaths) {
-          File sourceFile = new File(new File(baseDir, path), fileName);
+          final File sourceFile = new File(new File(baseDir, path), fileName);
           if (!sourceFile.exists())
             continue;
           if (isJson) {
@@ -146,10 +216,10 @@ public class ClosureMojo extends AbstractMojo {
 
   private List<JSSourceFile> getFiles(File closureSourceFile) throws MojoExecutionException {
     try {
-      List<JSSourceFile> sources = new ArrayList<JSSourceFile>();
+      final List<JSSourceFile> sources = new ArrayList<JSSourceFile>();
 
       boolean inResourceBlock = false;
-      LineIterator it = FileUtils.lineIterator(closureSourceFile);
+      final LineIterator it = FileUtils.lineIterator(closureSourceFile);
       while (it.hasNext()) {
         String line = it.next().trim();
         if ("// --START-RESOURCES--".equals(line)) {
