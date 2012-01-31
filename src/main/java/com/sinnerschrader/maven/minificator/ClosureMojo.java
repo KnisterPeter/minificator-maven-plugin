@@ -6,9 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -75,28 +73,25 @@ public class ClosureMojo extends AbstractMojo {
   private String closurePreScript;
 
   /**
+   * @parameter
+   */
+  private String closurePostScript;
+
+  /**
    * @param closurePreScript
    *          the closurePreScript to set
    */
   public final void setClosurePreScript(String closurePreScript) {
-    getLog().info("Set PreScript:"+closurePreScript);
     this.closurePreScript = closurePreScript;
   }
-  
-  /**
-   * @parameter
-   */
-  private String closurePostScript;
 
   /**
    * @param closurePostScript
    *          the closurePostScript to set
    */
   public final void setClosurePostScript(String closurePostScript) {
-    getLog().info("Set PostScript:"+closurePostScript);
     this.closurePostScript = closurePostScript;
   }
-
 
   /**
    * @param closureBasePath
@@ -131,51 +126,42 @@ public class ClosureMojo extends AbstractMojo {
   }
 
   /**
-   * @parameter expression="${SIMPLE_OPTIMIZATIONS,ADVANCED_OPTIMIZATIONS,WHITESPACE_ONLY}"
+   * @parameter expression=
+   *            "${SIMPLE_OPTIMIZATIONS,ADVANCED_OPTIMIZATIONS,WHITESPACE_ONLY}"
    */
   private CompilationLevel closureOptimization = getCompilationLevel("SIMPLE_OPTIMIZATIONS");
 
-  private static CompilationLevel getCompilationLevel(String level) 
-  {
-    final Map<String, CompilationLevel> factory = new HashMap<String, CompilationLevel>();
-    factory.put("SIMPLE_OPTIMIZATIONS", CompilationLevel.SIMPLE_OPTIMIZATIONS);
-    factory.put("ADVANCED_OPTIMIZATIONS", CompilationLevel.ADVANCED_OPTIMIZATIONS);
-    factory.put("WHITESPACE_ONLY", CompilationLevel.WHITESPACE_ONLY);
-    return factory.get(level);
+  private static CompilationLevel getCompilationLevel(String level) {
+    return CompilationLevel.valueOf(level);
   }
 
   /**
-   * @param closurePostScript
-   *          the closurePostScript to set
+   * @param optimization
+   *          The closure optimization level
    */
-  public final void setClosureOptimization(String optimization) {   
+  public final void setClosureOptimization(String optimization) {
     final CompilationLevel cl = getCompilationLevel(optimization);
-    if (cl == null) {
-      getLog().info("setClosureOptimization:not set:"+optimization);
-    } else {
-      getLog().info("setClosureOptimization:set:"+optimization);
+    if (cl != null) {
       this.closureOptimization = cl;
     }
   }
 
-  
-  
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
     final Compiler compiler = new Compiler();
     final CompilerOptions options = new CompilerOptions();
     closureOptimization.setOptionsForCompilationLevel(options);
-  
+
     final List<JSSourceFile> externs = Collections.emptyList();
     final List<JSSourceFile> sources = new ArrayList<JSSourceFile>();
     if (closurePreScript != null) {
       getLog().info("Include PreScript:");
-    	sources.add(JSSourceFile.fromCode("closurePreScript.js", closurePreScript));
+      sources.add(JSSourceFile.fromCode("closurePreScript.js", closurePreScript));
     }
     getFiles(sources);
     if (closurePostScript != null) {
       getLog().info("Include PostScript:");
-    	sources.add(JSSourceFile.fromCode("closurePostScript.js", closurePostScript));
+      sources.add(JSSourceFile.fromCode("closurePostScript.js", closurePostScript));
     }
 
     getLog().info("Got " + sources.size() + " source files");
