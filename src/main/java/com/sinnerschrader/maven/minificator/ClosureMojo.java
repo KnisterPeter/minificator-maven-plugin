@@ -78,6 +78,16 @@ public class ClosureMojo extends AbstractMojo {
   private String closurePostScript;
 
   /**
+   * @parameter
+   */
+  private String closurePreScriptFile;
+
+  /**
+   * @parameter
+   */
+  private String closurePostScriptFile;
+
+  /**
    * @param closurePreScript
    *          the closurePreScript to set
    */
@@ -91,6 +101,20 @@ public class ClosureMojo extends AbstractMojo {
    */
   public final void setClosurePostScript(String closurePostScript) {
     this.closurePostScript = closurePostScript;
+  }
+
+  /**
+   * @param closurePreScriptFile
+   */
+  public void setClosurePreScriptFile(String closurePreScriptFile) {
+    this.closurePreScriptFile = closurePreScriptFile;
+  }
+
+  /**
+   * @param closurePostScriptFile
+   */
+  public void setClosurePostScriptFile(String closurePostScriptFile) {
+    this.closurePostScriptFile = closurePostScriptFile;
   }
 
   /**
@@ -157,11 +181,15 @@ public class ClosureMojo extends AbstractMojo {
     if (closurePreScript != null) {
       getLog().info("Include PreScript:");
       sources.add(JSSourceFile.fromCode("closurePreScript.js", closurePreScript));
+    } else if (closurePreScriptFile != null) {
+      sources.add(JSSourceFile.fromFile(closurePreScriptFile));
     }
     getFiles(sources);
     if (closurePostScript != null) {
       getLog().info("Include PostScript:");
       sources.add(JSSourceFile.fromCode("closurePostScript.js", closurePostScript));
+    } else if (closurePostScriptFile != null) {
+      sources.add(JSSourceFile.fromFile(closurePostScriptFile));
     }
 
     getLog().info("Got " + sources.size() + " source files");
