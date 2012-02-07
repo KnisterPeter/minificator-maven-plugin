@@ -181,15 +181,11 @@ public class ClosureMojo extends AbstractMojo {
     if (closurePreScript != null) {
       getLog().info("Include PreScript:");
       sources.add(JSSourceFile.fromCode("closurePreScript.js", closurePreScript));
-    } else if (closurePreScriptFile != null) {
-      sources.add(JSSourceFile.fromFile(closurePreScriptFile));
     }
     getFiles(sources);
     if (closurePostScript != null) {
       getLog().info("Include PostScript:");
       sources.add(JSSourceFile.fromCode("closurePostScript.js", closurePostScript));
-    } else if (closurePostScriptFile != null) {
-      sources.add(JSSourceFile.fromFile(closurePostScriptFile));
     }
 
     getLog().info("Got " + sources.size() + " source files");
@@ -203,7 +199,10 @@ public class ClosureMojo extends AbstractMojo {
       FileUtils.forceMkdir(closureTargetFile.getParentFile());
       final FileWriter writer = new FileWriter(closureTargetFile);
       try {
-        writer.write(compiler.toSource());
+        StringBuilder sb = new StringBuilder();
+        sb.append(FileUtils.readFileToString(new File(closurePreScriptFile))).append(compiler.toSource())
+            .append(FileUtils.readFileToString(new File(closurePostScriptFile)));
+        writer.write(sb.toString());
       } finally {
         writer.close();
       }
