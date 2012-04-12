@@ -1,4 +1,4 @@
-package com.sinnerschrader.maven.minificator;
+package com.sinnerschrader.minificator;
 
 import java.io.File;
 import java.io.FileReader;
@@ -10,9 +10,6 @@ import java.io.Writer;
 import java.net.URL;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
@@ -22,28 +19,73 @@ import com.yahoo.platform.yui.compressor.CssCompressor;
 
 /**
  * @author marwol
- * @goal lesscss
- * @phase process-resources
  */
-public class LessMojo extends AbstractMojo {
+public class Less {
 
-  /**
-   * @parameter
-   */
+  private final Logger logger;
+
   private File lessJs;
 
-  /**
-   * @parameter
-   */
   private File lesscssInputFile;
 
-  /**
-   * @parameter
-   */
   private File lesscssOutputFile;
 
-  @Override
-  public void execute() throws MojoExecutionException, MojoFailureException {
+  /**
+   * @param logger
+   */
+  public Less(Logger logger) {
+    this.logger = logger;
+  }
+
+  /**
+   * @return the lessJs
+   */
+  public final File getLessJs() {
+    return this.lessJs;
+  }
+
+  /**
+   * @param lessJs
+   *          the lessJs to set
+   */
+  public final void setLessJs(File lessJs) {
+    this.lessJs = lessJs;
+  }
+
+  /**
+   * @return the lesscssInputFile
+   */
+  public final File getLesscssInputFile() {
+    return this.lesscssInputFile;
+  }
+
+  /**
+   * @param lesscssInputFile
+   *          the lesscssInputFile to set
+   */
+  public final void setLesscssInputFile(File lesscssInputFile) {
+    this.lesscssInputFile = lesscssInputFile;
+  }
+
+  /**
+   * @return the lesscssOutputFile
+   */
+  public final File getLesscssOutputFile() {
+    return this.lesscssOutputFile;
+  }
+
+  /**
+   * @param lesscssOutputFile
+   *          the lesscssOutputFile to set
+   */
+  public final void setLesscssOutputFile(File lesscssOutputFile) {
+    this.lesscssOutputFile = lesscssOutputFile;
+  }
+
+  /**
+   * @throws ExecutionException
+   */
+  public void run() throws ExecutionException {
     Context context = Context.enter();
     try {
       Global global = new Global();
@@ -52,6 +94,7 @@ public class LessMojo extends AbstractMojo {
 
       URL embed = getClass().getResource("/embed.js");
       URL parser = getClass().getResource("/less-1.0.38.js");
+
       context.evaluateReader(scope, new InputStreamReader(embed.openStream()), embed.getFile(), 1, null);
       if (lessJs == null) {
         context.evaluateReader(scope, new InputStreamReader(parser.openStream()), parser.getFile(), 1, null);
@@ -65,15 +108,16 @@ public class LessMojo extends AbstractMojo {
         String css = (String) Context.call(null, (Function) scope.get("compileFile", scope), scope, scope, new Object[] { "file:"
             + lesscssInputFile.getAbsolutePath() });
         new CssCompressor(new StringReader(css)).compress(writer, -1);
-        getLog().info("Wrote css to " + lesscssOutputFile);
+        logger.info("Wrote css to " + lesscssOutputFile);
       } finally {
         writer.close();
       }
 
     } catch (IOException e) {
-      throw new MojoExecutionException("Failed to compile less scripts", e);
+      throw new ExecutionException("Failed to compile less scripts", e);
     } finally {
       Context.exit();
     }
   }
+
 }

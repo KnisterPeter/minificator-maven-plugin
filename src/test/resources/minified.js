@@ -1,0 +1,1 @@
+(function(){alert("test1")})();(function(){alert("test2")})();

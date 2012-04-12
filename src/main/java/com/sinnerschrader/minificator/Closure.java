@@ -1,4 +1,4 @@
-package com.sinnerschrader.maven.minificator;
+package com.sinnerschrader.minificator;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -10,9 +10,6 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.google.javascript.jscomp.CompilationLevel;
@@ -23,69 +20,160 @@ import com.google.javascript.jscomp.Result;
 
 /**
  * @author marwol
- * @goal closure
- * @phase process-resources
  */
-public class ClosureMojo extends AbstractMojo {
+public class Closure {
 
-  /**
-   * @parameter
-   */
+  private Logger logger;
+
   private boolean isJson;
 
-  /**
-   * @parameter expression="${basedir}"
-   */
   private File baseDir;
 
-  /**
-   * @parameter
-   * @deprecated Use {{@link #closureBasePaths} instead
-   */
   @Deprecated
   private String closureBasePath;
 
-  /**
-   * @parameter
-   */
   private String[] closureBasePaths;
 
-  /**
-   * @parameter
-   * @deprecated Use {{@link #closureSourceFiles} instead
-   */
   @Deprecated
   private String closureSourceFile;
 
-  /**
-   * @parameter
-   */
   private String[] closureSourceFiles;
 
-  /**
-   * @parameter
-   */
   private File closureTargetFile;
 
-  /**
-   * @parameter
-   */
   private String closurePreScript;
 
-  /**
-   * @parameter
-   */
   private String closurePostScript;
 
-  /**
-   * @parameter
-   */
-  private String closurePreScriptFile;
+  private File closurePreScriptFile;
+
+  private File closurePostScriptFile;
+
+  private CompilationLevel closureOptimization = getCompilationLevel("SIMPLE_OPTIMIZATIONS");
 
   /**
-   * @parameter
+   * @param logger
    */
-  private String closurePostScriptFile;
+  public Closure(Logger logger) {
+    this.logger = logger;
+  }
+
+  /**
+   * @return the logger
+   */
+  public final Logger getLogger() {
+    return this.logger;
+  }
+
+  /**
+   * @param logger
+   *          the logger to set
+   */
+  public final void setLogger(Logger logger) {
+    this.logger = logger;
+  }
+
+  /**
+   * @return the isJson
+   */
+  public final boolean isJson() {
+    return this.isJson;
+  }
+
+  /**
+   * @param isJson
+   *          the isJson to set
+   */
+  public final void setJson(boolean isJson) {
+    this.isJson = isJson;
+  }
+
+  /**
+   * @return the baseDir
+   */
+  public final File getBaseDir() {
+    return this.baseDir;
+  }
+
+  /**
+   * @param baseDir
+   *          the baseDir to set
+   */
+  public final void setBaseDir(File baseDir) {
+    this.baseDir = baseDir;
+  }
+
+  /**
+   * @return the closureTargetFile
+   */
+  public final File getClosureTargetFile() {
+    return this.closureTargetFile;
+  }
+
+  /**
+   * @param closureTargetFile
+   *          the closureTargetFile to set
+   */
+  public final void setClosureTargetFile(File closureTargetFile) {
+    this.closureTargetFile = closureTargetFile;
+  }
+
+  /**
+   * @return the closureOptimization
+   */
+  public final CompilationLevel getClosureOptimization() {
+    return this.closureOptimization;
+  }
+
+  /**
+   * @param closureOptimization
+   *          the closureOptimization to set
+   */
+  public final void setClosureOptimization(CompilationLevel closureOptimization) {
+    this.closureOptimization = closureOptimization;
+  }
+
+  /**
+   * @return the closureBasePath
+   */
+  public final String getClosureBasePath() {
+    return this.closureBasePath;
+  }
+
+  /**
+   * @return the closureSourceFile
+   */
+  public final String getClosureSourceFile() {
+    return this.closureSourceFile;
+  }
+
+  /**
+   * @return the closurePreScript
+   */
+  public final String getClosurePreScript() {
+    return this.closurePreScript;
+  }
+
+  /**
+   * @return the closurePostScript
+   */
+  public final String getClosurePostScript() {
+    return this.closurePostScript;
+  }
+
+  /**
+   * @return the closurePreScriptFile
+   */
+  public final File getClosurePreScriptFile() {
+    return this.closurePreScriptFile;
+  }
+
+  /**
+   * @return the closurePostScriptFile
+   */
+  public final File getClosurePostScriptFile() {
+    return this.closurePostScriptFile;
+  }
 
   /**
    * @param closurePreScript
@@ -106,14 +194,14 @@ public class ClosureMojo extends AbstractMojo {
   /**
    * @param closurePreScriptFile
    */
-  public void setClosurePreScriptFile(String closurePreScriptFile) {
+  public void setClosurePreScriptFile(File closurePreScriptFile) {
     this.closurePreScriptFile = closurePreScriptFile;
   }
 
   /**
    * @param closurePostScriptFile
    */
-  public void setClosurePostScriptFile(String closurePostScriptFile) {
+  public void setClosurePostScriptFile(File closurePostScriptFile) {
     this.closurePostScriptFile = closurePostScriptFile;
   }
 
@@ -122,7 +210,7 @@ public class ClosureMojo extends AbstractMojo {
    *          the closureBasePath to set
    */
   public final void setClosureBasePath(String closureBasePath) {
-    this.closureBasePaths = new String[] { closureBasePath };
+    closureBasePaths = new String[] { closureBasePath };
   }
 
   /**
@@ -149,12 +237,6 @@ public class ClosureMojo extends AbstractMojo {
     this.closureSourceFiles = closureSourceFiles;
   }
 
-  /**
-   * @parameter expression=
-   *            "${SIMPLE_OPTIMIZATIONS,ADVANCED_OPTIMIZATIONS,WHITESPACE_ONLY}"
-   */
-  private CompilationLevel closureOptimization = getCompilationLevel("SIMPLE_OPTIMIZATIONS");
-
   private static CompilationLevel getCompilationLevel(String level) {
     return CompilationLevel.valueOf(level);
   }
@@ -170,8 +252,10 @@ public class ClosureMojo extends AbstractMojo {
     }
   }
 
-  @Override
-  public void execute() throws MojoExecutionException, MojoFailureException {
+  /**
+   * @throws ExecutionException
+   */
+  public void run() throws ExecutionException {
     final Compiler compiler = new Compiler();
     final CompilerOptions options = new CompilerOptions();
     closureOptimization.setOptionsForCompilationLevel(options);
@@ -179,39 +263,42 @@ public class ClosureMojo extends AbstractMojo {
     final List<JSSourceFile> externs = Collections.emptyList();
     final List<JSSourceFile> sources = new ArrayList<JSSourceFile>();
     if (closurePreScript != null) {
-      getLog().info("Include PreScript:");
+      getLogger().info("Include PreScript:");
       sources.add(JSSourceFile.fromCode("closurePreScript.js", closurePreScript));
     }
     getFiles(sources);
     if (closurePostScript != null) {
-      getLog().info("Include PostScript:");
+      getLogger().info("Include PostScript:");
       sources.add(JSSourceFile.fromCode("closurePostScript.js", closurePostScript));
     }
 
-    getLog().info("Got " + sources.size() + " source files");
+    getLogger().info("Got " + sources.size() + " source files");
     final Result result = compiler.compile(externs, sources, options);
     if (!result.success) {
-      throw new MojoExecutionException("Failed to compile scripts");
+      throw new ExecutionException("Failed to compile scripts");
     }
 
-    getLog().info("Writing compiled js to " + closureTargetFile);
+    getLogger().info("Writing compiled js to " + closureTargetFile);
     try {
       FileUtils.forceMkdir(closureTargetFile.getParentFile());
       final FileWriter writer = new FileWriter(closureTargetFile);
       try {
+        String preSource = closurePreScriptFile != null ? FileUtils.readFileToString(closurePreScriptFile) : "";
+        String postSource = closurePostScriptFile != null ? FileUtils.readFileToString(closurePostScriptFile) : "";
+
         StringBuilder sb = new StringBuilder();
-        sb.append(FileUtils.readFileToString(new File(closurePreScriptFile))).append(compiler.toSource())
-            .append(FileUtils.readFileToString(new File(closurePostScriptFile)));
+        sb.append(preSource).append(compiler.toSource()).append(postSource);
         writer.write(sb.toString());
       } finally {
         writer.close();
       }
     } catch (IOException e) {
-      throw new MojoExecutionException("Failed to write target file: " + closureTargetFile, e);
+      throw new ExecutionException("Failed to write target file: " + closureTargetFile, e);
     }
+
   }
 
-  private List<JSSourceFile> getFiles(List<JSSourceFile> files) throws MojoExecutionException {
+  private List<JSSourceFile> getFiles(List<JSSourceFile> files) throws ExecutionException {
     if (closureSourceFiles != null && closureSourceFiles.length > 0)
       for (final String fileName : closureSourceFiles) {
         for (String path : closureBasePaths) {
@@ -227,7 +314,7 @@ public class ClosureMojo extends AbstractMojo {
     return files;
   }
 
-  private List<JSSourceFile> getFiles(File closureSourceFile) throws MojoExecutionException {
+  private List<JSSourceFile> getFiles(File closureSourceFile) throws ExecutionException {
     try {
       final List<JSSourceFile> sources = new ArrayList<JSSourceFile>();
 
@@ -255,7 +342,7 @@ public class ClosureMojo extends AbstractMojo {
           if (FileUtils.readFileToString(sourceFile).contains("// --START-RESOURCES--")) {
             sources.addAll(getFiles(sourceFile));
           } else {
-            getLog().info("Source File: " + sourceFile.getAbsolutePath());
+            getLogger().info("Source File: " + sourceFile.getAbsolutePath());
             sources.add(JSSourceFile.fromFile(sourceFile));
           }
         }
@@ -263,13 +350,13 @@ public class ClosureMojo extends AbstractMojo {
 
       return sources;
     } catch (IOException e) {
-      throw new MojoExecutionException("Failed to read source files: " + closureSourceFile, e);
+      throw new ExecutionException("Failed to read source files: " + closureSourceFile, e);
     }
   }
 
-  private List<JSSourceFile> getFilesFromJson(final File sourceFile) throws MojoExecutionException {
+  private List<JSSourceFile> getFilesFromJson(final File sourceFile) throws ExecutionException {
     try {
-      getLog().info("sourceFile JSON: " + sourceFile);
+      getLogger().info("sourceFile JSON: " + sourceFile);
       final List<JSSourceFile> sources = new ArrayList<JSSourceFile>();
       for (final String fileName : new ObjectMapper().readValue(sourceFile, String[].class)) {
         File file = null;
@@ -283,12 +370,12 @@ public class ClosureMojo extends AbstractMojo {
         if (file == null) {
           throw new FileNotFoundException("Failed to locate '" + fileName + "' in any base path");
         }
-        getLog().info("Source File: " + file.getAbsolutePath());
+        getLogger().info("Source File: " + file.getAbsolutePath());
         sources.add(JSSourceFile.fromFile(file));
       }
       return sources;
     } catch (IOException e) {
-      throw new MojoExecutionException("Failed to read source files: " + sourceFile, e);
+      throw new ExecutionException("Failed to read source files: " + sourceFile, e);
     }
   }
 

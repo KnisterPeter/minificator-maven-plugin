@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="task tests" default="all">
+
+  <taskdef name="closure" classname="com.sinnerschrader.minificator.ant.ClosureTask" classpath="../../../target/minificator.jar" />
+  <taskdef name="lessjs" classname="com.sinnerschrader.minificator.ant.LessTask" classpath="../../../target/minificator.jar" />
+  <taskdef name="cssembed" classname="com.sinnerschrader.minificator.ant.CssEmbedTask" classpath="../../../target/minificator.jar" />
+
+  <target name="test-closure">
+    <closure json="true" target="minified.js">
+      <basePath>js</basePath>
+      <sourceFile>basic.json</sourceFile>
+    </closure>
+  </target>
+
+  <target name="test-less">
+    <!-- Optional: Set attribute lessjs to a path for a less.js file -->
+    <lessjs input="less/test.less" output="less.css" />
+  </target>
+
+  <target name="test-cssembed">
+    <cssembed input="cssembed/test.css" output="embed.css" />
+  </target>
+
+  <target name="all" depends="test-closure,test-less,test-cssembed">
+  </target>
+
+</project>
