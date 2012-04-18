@@ -32,7 +32,7 @@ public class Closure {
   @Deprecated
   private String closureBasePath;
 
-  private String[] closureBasePaths;
+  private String[] closureBasePaths = new String[] { "." };
 
   @Deprecated
   private String closureSourceFile;
